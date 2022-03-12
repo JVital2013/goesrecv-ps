@@ -4,7 +4,7 @@
 
 $ip = "192.168.1.137"
 $port = "5000"
-$outfile = "C:\Users\jvita\Desktop\Unprocessed"
+$outfile = "C:\outfolder"
 $maxSize = 2136997888
 
 #Initialize nanomsg subscription to goesrecv
@@ -43,7 +43,7 @@ catch
 
 Write-Output "Connected to goesresv host!"
 
-#Listen for packets forever, splitting files at 2GB
+#Listen for packets forever, splitting files at the specified size
 $newFile = $true
 do {
 
