@@ -1,6 +1,6 @@
 
 # goesrecv-ps
-A collection of PowerShell scripts for doing cool things with pitern's goestools. This repository currently consists of goesrecv-rtltcp.ps1 and goesrecv-iq.ps1, but more may be added over time. Unless otherwise specified, all scripts are compatible with both PowerShell for Windows (powershell) and PowerShell Core (pwsh).
+A collection of PowerShell scripts for doing cool things with pietern's goestools. This repository currently consists of goesrecv-rtltcp.ps1 and goesrecv-iq.ps1, but more may be added over time. Unless otherwise specified, all scripts are compatible with both PowerShell for Windows (powershell) and PowerShell Core (pwsh).
 
 You will likely need to modify your goesrecv.conf file to open the necessary ports. Scroll to the "Recommended goesrecv.conf configuration" section for details.
 
