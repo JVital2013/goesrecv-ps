@@ -87,6 +87,7 @@ gain = 5
 # nanomsg
 [rtlsdr.sample_publisher]
 bind = "tcp://0.0.0.0:5000"
+send_buffer = 2097152
 
 [costas]
 max_deviation = 200e3
