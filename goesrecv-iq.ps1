@@ -5,7 +5,7 @@
 $ip = "192.168.1.137"
 $port = "5000"
 $outfile = "C:\outfolder"
-$maxSize = 2136997888
+$maxSize = 0
 
 #Initialize nanomsg subscription to goesrecv
 [byte[]] $nninit = 0x00, 0x53, 0x50, 0x00, 0x00, 0x21, 0x00, 0x00
@@ -45,25 +45,60 @@ Write-Output "Connected to goesresv host!"
 
 #Listen for packets forever, splitting files at the specified size
 $newFile = $true
+$bytesBeforeHeader = 0
 do {
 
-    if($newFile -eq $true)
+    try
     {
-        $newName = "$outfile\$(Get-Date -UFormat %s -Millisecond 0).iq"
-        $FileStream = New-Object System.IO.FileStream -ArgumentList $newName, $([System.IO.FileMode]::Create)
-        Write-Output "Writing to $newName..."
-        $newFile = $false
+        #Make new file, if necessary
+        if($newFile -eq $true)
+        {
+            $newName = "$outfile\$(Get-Date -UFormat %s -Millisecond 0).iq"
+            $FileStream = New-Object System.IO.FileStream -ArgumentList $newName, $([System.IO.FileMode]::Create)
+            Write-Output "Writing to $newName..."
+            $newFile = $false
+        }
+
+        #Recieve all available bytes
+        $num = $socket.Receive($dres)
+        $remainingBytesToWrite = $num
+        $startReadingAt = 0
+
+        #Loop through all the nanomsg headers
+        while($remainingBytesToWrite -gt $bytesBeforeHeader)
+        {
+            #Write any information before the header
+            if($bytesBeforeHeader -gt 0)
+            {
+                $FileStream.Write($dres, $startReadingAt, $bytesBeforeHeader)
+                $totalBytes += $bytesBeforeHeader
+            }
+
+            #Get next nanomsg packet length
+            [System.Array]::Copy($dres, $bytesBeforeHeader + $startReadingAt, $res, 0, 8) | Out-Null
+            if([Bitconverter]::IsLittleEndian) {[array]::Reverse($res)}
+            $startReadingAt += $bytesBeforeHeader + 8
+            $remainingBytesToWrite = $num - $startReadingAt
+            $bytesBeforeHeader = [BitConverter]::ToUInt64($res, 0)
+        }
+
+        #No more headers in bytes we have; write the rest of the bytes
+        $FileStream.Write($dres, $startReadingAt, $remainingBytesToWrite)
+        $bytesBeforeHeader -= $remainingBytesToWrite
+        $totalBytes += $remainingBytesToWrite
+
+        if($maxSize -ne 0 -and $totalBytes -gt $maxSize)
+        {
+            $FileStream.Close()
+            $totalBytes = 0
+            $newFile = $true
+        }
     }
-
-    $num = $socket.Receive($dres)
-    $FileStream.Write($dres, 0, $num)
-    $totalBytes += $num
-
-    if($maxSize -ne 0 -and $totalBytes -gt $maxSize)
+    catch
     {
+        Write-Warning "Error saving iq files"
         $FileStream.Close()
-        $totalBytes = 0
-        $newFile = $true
+        $socket.Close()
     }
 
 } while($num -ne 0)

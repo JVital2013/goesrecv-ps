@@ -72,11 +72,37 @@ Write-Output "Connected to goesresv host!"
 Write-Output "Bridging goesrecv IQ samples to RTL_TCP client..."
 
 #Listen for packets forever
+$bytesBeforeHeader = 0
 do {
     try
     {
+        #Recieve all available bytes
         $num = $socket.Receive($dres)
-        $stream.Write($dres, 0, $num)
+        $remainingBytesToWrite = $num
+        $startReadingAt = 0
+
+        #Loop through all the nanomsg headers
+        while($remainingBytesToWrite -gt $bytesBeforeHeader)
+        {
+            #Write any information before the header
+            if($bytesBeforeHeader -gt 0)
+            {
+                $stream.Write($dres, $startReadingAt, $bytesBeforeHeader)
+                $totalBytes += $bytesBeforeHeader
+            }
+
+            #Get next nanomsg packet length
+            [System.Array]::Copy($dres, $bytesBeforeHeader + $startReadingAt, $res, 0, 8) | Out-Null
+            if([Bitconverter]::IsLittleEndian) {[array]::Reverse($res)}
+            $startReadingAt += $bytesBeforeHeader + 8
+            $remainingBytesToWrite = $num - $startReadingAt
+            $bytesBeforeHeader = [BitConverter]::ToUInt64($res, 0)
+        }
+
+        #No more headers in bytes we have; write the rest of the bytes
+        $stream.Write($dres, $startReadingAt, $remainingBytesToWrite)
+        $bytesBeforeHeader -= $remainingBytesToWrite
+        $totalBytes += $remainingBytesToWrite
     }
     catch
     {
