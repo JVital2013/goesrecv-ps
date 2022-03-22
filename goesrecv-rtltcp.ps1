@@ -113,6 +113,12 @@ do {
         exit
     }
 
+    #Sending small packets too often causes issues with some programs since rtl_tcp sends large blocks
+    #of iq samples at a time (per Wireshark inspection). Slow things down a bit to prevent flooding
+    #clients
+
+    Start-Sleep -Milliseconds 1
+
 } while($num -ne 0)
 
 
