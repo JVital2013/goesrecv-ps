@@ -1,8 +1,11 @@
 
 # goesrecv-ps
-A collection of PowerShell scripts for doing cool things with pietern's goestools. This repository currently consists of goesrecv-rtltcp.ps1 and goesrecv-iq.ps1, but more may be added over time. Unless otherwise specified, all scripts are compatible with both PowerShell for Windows (powershell) and PowerShell Core (pwsh).
+A collection of PowerShell scripts for doing cool things with pietern's goestools. This repository currently consists of:
+ - goesrecv-iq.ps1
+ - goesrecv-rtltcp.ps1
+ - goesrecv-vcidmon.ps1
 
-You will likely need to modify your goesrecv.conf file to open the necessary ports. Scroll to the "Recommended goesrecv.conf configuration" section for details.
+More scripts may be added over time. Unless otherwise specified, all scripts are compatible with both PowerShell for Windows (powershell) and PowerShell Core (pwsh). You will likely need to modify your goesrecv.conf file to open the necessary ports. Scroll to the "Recommended goesrecv.conf configuration" section for details.
 
 NOTE: This software is experimental and is for testing and educational purposes only. It leverages what appears to be undocumented parts of goesrecv, so the data may not be 100% accurate. If you see any problems with my code, or potential ways to improve it, let me know!
 
@@ -66,6 +69,25 @@ As a side note, you can also just use nanocat (https://nanomsg.org/v1.1.5/nanoca
 #Substitute the IP address if necessary
 nanocat --sub --connect tcp://127.0.0.1:5000 --raw > sdr.bin
 ```
+
+## goesrecv-vcidmon.ps1
+Monitors the current Virtual Channel ID (VCID) being broadcast, and counts the number of contiguous packets in each run. This is useful to identify when the satellite is idle so you can schedule system maintenance and reboots - all while missing as little data as possible.
+
+![Example CSV file from goesrecv-vcidmon](screenshots/vcid-csv.PNG)
+
+**Basic instructions:**
+
+1. Make sure your goesrecv.conf contains a `[decoder.packet_publisher]` section - which it will if you're using goesproc or goeslrit. Scroll to the "Recommended goesrecv.conf configuration" section for details on that.
+2. Edit goesrecv-vcidmon.ps1. At the top, set:
+   - `$ip` to match the IP of where goesrecv is running (127.0.0.1 if on the same machine as goesrecv)
+   - `$port` to match the `[decoder.packet_publisher]` port in goesrecv.conf *(default: 5004)*
+   - `$ignoreEmwinDcs` to $true to ignore EMWIN/DCS packets, or $false to dump all packets *(default: $true)*
+   - `$logfile` can be commented out to disable, or set to a path for creating a CSV log file
+
+3. Run goesrecv-vcidmon.ps1. On Windows you can right-click on the script and click "Run in PowerShell." On Linux/Mac, you'll need to run `pwsh goesrecv-vcidmon.ps1`. 
+4. When you're done monitoring, close the script.
+
+This information is also displayed by goesproc when you're running it in an interactive shell, but goesrecv-vcidmon makes logging and remote monitoring much easier.
 
 ## Recommended goesrecv.conf configuration
 You can have more sections to your conf file than this, and the SDR-specific settings will differ based on the SDR you're using. I have several sections enabled for goesrecv-monitor (https://github.com/sam210723/goesrecv-monitor), as well as graphite/statsd (https://hub.docker.com/r/graphiteapp/graphite-statsd/).
