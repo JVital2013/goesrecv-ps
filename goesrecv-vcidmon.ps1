@@ -49,22 +49,22 @@ $totalBytes = 0
 #Connect to goesrecv SDR sample publisher
 try
 {
-    Write-Output "Connecting to goesresv host..."
-    $socket.Connect($ip, $port)
-    $socket.Send($nninit) | Out-Null
-    $socket.Receive($res) | Out-Null
+	Write-Output "Connecting to goesresv host..."
+	$socket.Connect($ip, $port)
+	$socket.Send($nninit) | Out-Null
+	$socket.Receive($res) | Out-Null
 
-    if(-not [System.Linq.Enumerable]::SequenceEqual($nnires, $res))
-    {
-        Write-Warning "Could Not Connect to host"
-        $socket.Close()
-        exit
-    }
+	if(-not [System.Linq.Enumerable]::SequenceEqual($nnires, $res))
+	{
+		Write-Warning "Could Not Connect to host"
+		$socket.Close()
+		exit
+	}
 }
 catch
 {
-    Write-Warning "Could Not Connect to host"
-    exit
+	Write-Warning "Could Not Connect to host"
+	exit
 }
 
 Write-Output "Connected to goesresv host!"
@@ -78,74 +78,74 @@ $packetCount = 0
 $lastVCID = -1
 do {
 
-    try
-    {
-        #Recieve all available bytes
-        $num = $socket.Receive($dres)
-        $remainingBytesToWrite = $num
-        $startReadingAt = 0
+	try
+	{
+		#Recieve all available bytes
+		$num = $socket.Receive($dres)
+		$remainingBytesToWrite = $num
+		$startReadingAt = 0
 
-        #Loop through all the nanomsg headers
-        while($remainingBytesToWrite -gt $bytesBeforeHeader)
-        {
-            #Write any information before the header
-            if($bytesBeforeHeader -gt 0)
-            {
-                [System.Buffer]::BlockCopy($dres, $startReadingAt, $buffer, $totalBytes, $bytesBeforeHeader)
-                $totalBytes += $bytesBeforeHeader
-            }
-
-            #Get next nanomsg packet length
-            [System.Array]::Copy($dres, $bytesBeforeHeader + $startReadingAt, $res, 0, 8) | Out-Null
-            if([Bitconverter]::IsLittleEndian) {[array]::Reverse($res)}
-            $startReadingAt += $bytesBeforeHeader + 8
-            $remainingBytesToWrite = $num - $startReadingAt
-            $bytesBeforeHeader = [BitConverter]::ToUInt64($res, 0)
-        }
-
-        #No more headers in bytes we have; write the rest of the bytes
-        [System.Buffer]::BlockCopy($dres, $startReadingAt, $buffer, $totalBytes, $remainingBytesToWrite)
-        $bytesBeforeHeader -= $remainingBytesToWrite
-        $totalBytes += $remainingBytesToWrite
-    }
-    catch
-    {
-        Write-Warning "Error parsing packet stream"
-        $socket.Close()
-        exit
-    }
-
-    #Parse for current channel
-    $currentOffset = 0
-    while($totalBytes -ge 892)
-    {
-        $vcid = $buffer[$currentOffset + 1] -band 0x3f
-        if($vcid -ne $lastVCID)
-        {
-            #Skip emwin and DCS channels if specified, but count others here
-            if($ignoreEmwinDcs -eq $false -or @(20, 21, 22, 32) -notcontains $vcid)
+		#Loop through all the nanomsg headers
+		while($remainingBytesToWrite -gt $bytesBeforeHeader)
+		{
+			#Write any information before the header
+			if($bytesBeforeHeader -gt 0)
 			{
-                if($packetCount -ne 0)
-                {
-                    Write-Output " - $packetCount packet$(if($packetCount -gt 1){"s"})"
-                    if(-not [String]::IsNullOrWhiteSpace($logfile)) {Add-Content -Path $logfile -Value "$packetCount"}
-                }
-
-				Write-Host "[$(Get-Date -Format G)] VCID $('{0:d2}' -f $vcid) - $($vcidLookup[$vcid])" -NoNewLine
-                if(-not [String]::IsNullOrWhiteSpace($logfile)) {Add-Content -Path $logfile -Value "$(Get-Date -Format G),$vcid,$($vcidLookup[$vcid])," -NoNewline}
-
-				$lastVCID = $vcid
-                $packetCount = 0
+				[System.Buffer]::BlockCopy($dres, $startReadingAt, $buffer, $totalBytes, $bytesBeforeHeader)
+				$totalBytes += $bytesBeforeHeader
 			}
 
-            #If ignoring emwin/dcs packets, don't count them to the channel currently transmitting
-            else {$packetCount-- | Out-Null}
-        }
+			#Get next nanomsg packet length
+			[System.Array]::Copy($dres, $bytesBeforeHeader + $startReadingAt, $res, 0, 8) | Out-Null
+			if([Bitconverter]::IsLittleEndian) {[array]::Reverse($res)}
+			$startReadingAt += $bytesBeforeHeader + 8
+			$remainingBytesToWrite = $num - $startReadingAt
+			$bytesBeforeHeader = [BitConverter]::ToUInt64($res, 0)
+		}
 
-        $packetCount++ | Out-Null
-        $currentOffset += 892
-        $totalBytes -= 892
-    }
+		#No more headers in bytes we have; write the rest of the bytes
+		[System.Buffer]::BlockCopy($dres, $startReadingAt, $buffer, $totalBytes, $remainingBytesToWrite)
+		$bytesBeforeHeader -= $remainingBytesToWrite
+		$totalBytes += $remainingBytesToWrite
+	}
+	catch
+	{
+		Write-Warning "Error parsing packet stream"
+		$socket.Close()
+		exit
+	}
+
+	#Parse for current channel
+	$currentOffset = 0
+	while($totalBytes -ge 892)
+	{
+		$vcid = $buffer[$currentOffset + 1] -band 0x3f
+		if($vcid -ne $lastVCID)
+		{
+			#Skip emwin and DCS channels if specified, but count others here
+			if($ignoreEmwinDcs -eq $false -or @(20, 21, 22, 32) -notcontains $vcid)
+			{
+				if($packetCount -ne 0)
+				{
+					Write-Output " - $packetCount packet$(if($packetCount -gt 1){"s"})"
+					if(-not [String]::IsNullOrWhiteSpace($logfile)) {Add-Content -Path $logfile -Value "$packetCount"}
+				}
+
+				Write-Host "[$(Get-Date -Format G)] VCID $('{0:d2}' -f $vcid) - $($vcidLookup[$vcid])" -NoNewLine
+				if(-not [String]::IsNullOrWhiteSpace($logfile)) {Add-Content -Path $logfile -Value "$(Get-Date -Format G),$vcid,$($vcidLookup[$vcid])," -NoNewline}
+
+				$lastVCID = $vcid
+				$packetCount = 0
+			}
+
+			#If ignoring emwin/dcs packets, don't count them to the channel currently transmitting
+			else {$packetCount-- | Out-Null}
+		}
+
+		$packetCount++ | Out-Null
+		$currentOffset += 892
+		$totalBytes -= 892
+	}
 
 } while($num -ne 0)
 
