@@ -10,6 +10,9 @@ More scripts may be added over time. Unless otherwise specified, all scripts are
 NOTE: This software is experimental and is for testing and educational purposes only. It leverages what appears to be undocumented parts of goesrecv, so the data may not be 100% accurate. If you see any problems with my code, or potential ways to improve it, let me know!
 
 ## goesrecv-rtltcp.ps1
+
+**Warning:** This script pushed signed 8-bit samples over the network. Most RTL-TCP clients are expecting unsigned 8-bit samples. The waveform is still viewable, but the signal cannot be decoded. More on this (hopefully) soon...
+
 Monitor the RF spectrum of your goestools-dedicated SDR in programs like Gqrx and SDRSharp - all while your goestools stack is still running. This can be useful in troubleshooting your setup without stopping goestools services.
 
 It works by connecting to the RTLSDR/AirSpy sample publisher on goesrecv, and relays the IQ samples as a standard rtl_tcp connection to the SDR client of your choice.
@@ -49,7 +52,7 @@ The recommended setup is to run goesrecv on one machine, then have your SDR appl
 *While you can technically run goesrecv, goesrecv-rtltcp, and your SDR applications on 3 separate machines, this is not recommended due to the network requirements necessary to handle that much traffic.*
 
 ## goesrecv-iq.ps1
-Record IQ samples from your goestools-dedicated SDR to a file. You can play this baseband file back in the SDR software of your choice.
+Record signed 8-bit IQ samples from your goestools-dedicated SDR to a file. You can play this baseband file back in the SDR software of your choice.
 
 ![Example of goesrecv-iq.ps1 running](screenshots/rtliq_demo.PNG)
 
