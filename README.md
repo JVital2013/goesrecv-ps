@@ -11,7 +11,7 @@ NOTE: This software is experimental and is for testing and educational purposes 
 
 ## goesrecv-rtltcp.ps1
 
-**Warning:** This script pushed signed 8-bit samples over the network. Most RTL-TCP clients are expecting unsigned 8-bit samples. The waveform is still viewable, but the signal cannot be decoded. More on this (hopefully) soon...
+**Warning:** This script pushes signed 8-bit samples over the network. Most RTL-TCP clients are expecting unsigned 8-bit samples. The waveform is still viewable, but the signal cannot be decoded. More on this (hopefully) soon...
 
 Monitor the RF spectrum of your goestools-dedicated SDR in programs like Gqrx and SDRSharp - all while your goestools stack is still running. This can be useful in troubleshooting your setup without stopping goestools services.
 
