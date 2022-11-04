@@ -2,57 +2,15 @@
 # goesrecv-ps
 A collection of PowerShell scripts for doing cool things with pietern's goestools. This repository currently consists of:
  - goesrecv-iq.ps1
- - goesrecv-rtltcp.ps1
  - goesrecv-vcidmon.ps1
+ - *goesrecv-rtltcp.ps1 (deprecated; [use GoesBetween instead](https://github.com/JVital2013/goesbetween))*
 
 More scripts may be added over time. Unless otherwise specified, all scripts are compatible with both PowerShell for Windows (powershell) and PowerShell Core (pwsh). You will likely need to modify your goesrecv.conf file to open the necessary ports. Scroll to the "Recommended goesrecv.conf configuration" section for details.
 
 NOTE: This software is experimental and is for testing and educational purposes only. It leverages what appears to be undocumented parts of goesrecv, so the data may not be 100% accurate. If you see any problems with my code, or potential ways to improve it, let me know!
 
-## goesrecv-rtltcp.ps1
-
-**Warning:** This script pushes signed 8-bit samples over the network. Most RTL-TCP clients are expecting unsigned 8-bit samples. The waveform is still viewable, but the signal cannot be decoded. More on this (hopefully) soon...
-
-Monitor the RF spectrum of your goestools-dedicated SDR in programs like Gqrx and SDRSharp - all while your goestools stack is still running. This can be useful in troubleshooting your setup without stopping goestools services.
-
-It works by connecting to the RTLSDR/AirSpy sample publisher on goesrecv, and relays the IQ samples as a standard rtl_tcp connection to the SDR client of your choice.
-
-![Example of SDRSharp connecting to goesrecv-rtltcp.ps1](screenshots/rtltcp_demo.PNG)
-
-**Basic instructions:**
-
-1. Make sure your goesrecv.conf contains a `[rtlsdr.sample_publisher]` or `[airspy.sample_publisher]` section. Scroll to the "Recommended goesrecv.conf configuration" section for details on that.
-2. Edit goesrecv-rtltcp.ps1. At the top, set:
-   - `$goesrecvIP` to match the IP of where goesrecv is running (127.0.0.1 if on the same machine as goesrecv)
-   - `$goesrecvPort` to match the `[rtlsdr.sample_publisher]` or `[airspy.sample_publisher]` port in goesrecv.conf *(default: 5000)*
-   - `$rtltcpPort` to specify the port where rtl_tcp clients (like SDRSharp or Gqrx) will connect *(default: 1234)*
-3. Run goesrecv-rtltcp.ps1. On Windows you can right-click on the script and click "Run in PowerShell." On Linux/Mac, you'll need to run `pwsh goesrecv-rtltcp.ps1`
-
-   ![Run goesrecv-rtltcp.ps1](screenshots/run-rtltcp.png)
-5. Connect your SDR software to the IP address and port of goesrecv-rtltcp (127.0.0.1:1234 if on the same machine as goesrecv-rtltcp). This varies by SDR program, but here's the instructions for SDRSharp:
-   - Open SDRSharp
-   - Change the Source to "RTL-SDR TCP"
-
-     ![Select Source in SDRSharp](screenshots/sdrsharp-setsource.PNG)
-   - Click the "gear" at the top to configure the source
-
-     ![Configure Source in SDRSharp](screenshots/sdrsharp-configuresource.png)
-   - Enter the IP address and port of goesrecv-rtltcp, and make sure the sample rate matches the sample rate set in goesrecv.conf. Close the settings window.
-
-     ![Source Settings in SDRSharp](screenshots/sdrsharp-sourcesettings.PNG)
-   - Click the play icon to start monitoring the spectrum
-6. When you stop your SDR software, goesrecv-rtltcp will automatically exit. Don't worry, goesrecv itself should still be running, processing data like normal! You will need to launch goesrecv-rtltcp again if you want to monitor the RF spectrum again.
-
-You won't be able to "tune" the SDR with goesrecv-rtltcp. It only lets you "see" the same spectrum that goesrecv sees for troubleshooting purposes. Because of this, your SDR software will not display the correct frequency, gain settings, or even tuner.
-
-While I have not tested it, this should work if you're using an AirSpy or one of the forks of goestools that work with HackRF, SoapySDR, and others.
-
-The recommended setup is to run goesrecv on one machine, then have your SDR application and goesrecv-rtltcp running together on another. You can also have goesrecv and goesrecv-rtltcp running together on one machine, and your SDR application on another. All 3 pieces of software can run on the same machine too - whatever works best for you.
-
-*While you can technically run goesrecv, goesrecv-rtltcp, and your SDR applications on 3 separate machines, this is not recommended due to the network requirements necessary to handle that much traffic.*
-
 ## goesrecv-iq.ps1
-Record signed 8-bit IQ samples from your goestools-dedicated SDR to a file. You can play this baseband file back in the SDR software of your choice.
+Record signed i8 IQ samples from your goestools-dedicated SDR to a file. You can play this baseband file back in the SDR software of your choice.
 
 ![Example of goesrecv-iq.ps1 running](screenshots/rtliq_demo.PNG)
 
@@ -91,6 +49,50 @@ Monitors the current Virtual Channel ID (VCID) being broadcast, and counts the n
 4. When you're done monitoring, close the script.
 
 This information is also displayed by goesproc when you're running it in an interactive shell, but goesrecv-vcidmon makes logging and remote monitoring much easier.
+
+## Deprecated Scripts
+
+### goesrecv-rtltcp.ps1
+
+**Warning:** This script pushes signed 8-bit samples over the network. Most RTL-TCP clients are expecting unsigned 8-bit samples. The waveform is still viewable, but the signal cannot be decoded. [Use GoesBetween instead](https://github.com/JVital2013/goesbetween).
+
+Monitor the RF spectrum of your goestools-dedicated SDR in programs like Gqrx and SDRSharp - all while your goestools stack is still running. This can be useful in troubleshooting your setup without stopping goestools services.
+
+It works by connecting to the RTLSDR/AirSpy sample publisher on goesrecv, and relays the IQ samples as a standard rtl_tcp connection to the SDR client of your choice.
+
+![Example of SDRSharp connecting to goesrecv-rtltcp.ps1](screenshots/rtltcp_demo.PNG)
+
+**Basic instructions:**
+
+1. Make sure your goesrecv.conf contains a `[rtlsdr.sample_publisher]` or `[airspy.sample_publisher]` section. Scroll to the "Recommended goesrecv.conf configuration" section for details on that.
+2. Edit goesrecv-rtltcp.ps1. At the top, set:
+   - `$goesrecvIP` to match the IP of where goesrecv is running (127.0.0.1 if on the same machine as goesrecv)
+   - `$goesrecvPort` to match the `[rtlsdr.sample_publisher]` or `[airspy.sample_publisher]` port in goesrecv.conf *(default: 5000)*
+   - `$rtltcpPort` to specify the port where rtl_tcp clients (like SDRSharp or Gqrx) will connect *(default: 1234)*
+3. Run goesrecv-rtltcp.ps1. On Windows you can right-click on the script and click "Run in PowerShell." On Linux/Mac, you'll need to run `pwsh goesrecv-rtltcp.ps1`
+
+   ![Run goesrecv-rtltcp.ps1](screenshots/run-rtltcp.png)
+5. Connect your SDR software to the IP address and port of goesrecv-rtltcp (127.0.0.1:1234 if on the same machine as goesrecv-rtltcp). This varies by SDR program, but here's the instructions for SDRSharp:
+   - Open SDRSharp
+   - Change the Source to "RTL-SDR TCP"
+
+     ![Select Source in SDRSharp](screenshots/sdrsharp-setsource.PNG)
+   - Click the "gear" at the top to configure the source
+
+     ![Configure Source in SDRSharp](screenshots/sdrsharp-configuresource.png)
+   - Enter the IP address and port of goesrecv-rtltcp, and make sure the sample rate matches the sample rate set in goesrecv.conf. Close the settings window.
+
+     ![Source Settings in SDRSharp](screenshots/sdrsharp-sourcesettings.PNG)
+   - Click the play icon to start monitoring the spectrum
+6. When you stop your SDR software, goesrecv-rtltcp will automatically exit. Don't worry, goesrecv itself should still be running, processing data like normal! You will need to launch goesrecv-rtltcp again if you want to monitor the RF spectrum again.
+
+You won't be able to "tune" the SDR with goesrecv-rtltcp. It only lets you "see" the same spectrum that goesrecv sees for troubleshooting purposes. Because of this, your SDR software will not display the correct frequency, gain settings, or even tuner.
+
+While I have not tested it, this should work if you're using an AirSpy or one of the forks of goestools that work with HackRF, SoapySDR, and others.
+
+The recommended setup is to run goesrecv on one machine, then have your SDR application and goesrecv-rtltcp running together on another. You can also have goesrecv and goesrecv-rtltcp running together on one machine, and your SDR application on another. All 3 pieces of software can run on the same machine too - whatever works best for you.
+
+*While you can technically run goesrecv, goesrecv-rtltcp, and your SDR applications on 3 separate machines, this is not recommended due to the network requirements necessary to handle that much traffic.*
 
 ## Recommended goesrecv.conf configuration
 You can have more sections to your conf file than this, and the SDR-specific settings will differ based on the SDR you're using. I have several sections enabled for goesrecv-monitor (https://github.com/sam210723/goesrecv-monitor), as well as graphite/statsd (https://hub.docker.com/r/graphiteapp/graphite-statsd/).
